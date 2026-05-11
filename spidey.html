@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Absurdist Spidey Life Tracker</title>
+<style>
+:root{
+  --red:#e63946;
+  --blue:#1d3557;
+  --bg:#060a0f;
+  --card:#0f1726;
+  --card2:#132235;
+  --ink:#e9f1ff;
+  --muted:#8aa0b9;
+  --black:#000;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
+  line-height:1.35;
+  overflow-x:hidden;
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0),
+    radial-gradient(ellipse at top, rgba(29,53,87,.35), transparent 60%),
+    radial-gradient(ellipse at bottom, rgba(230,57,70,.18), transparent 60%);
+  background-size:24px 24px, 100% 100%, 100% 100%;
+}
+.web{
+  position:fixed; width:260px; height:260px; opacity:.14;
+  pointer-events:none; z-index:0; background-repeat:no-repeat;
+  background-size:contain;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%23e63946' stroke-width='2' opacity='0.9'%3E%3Cpath d='M0 0 L200 200 M0 33 L33 0 M0 66 L66 0 M0 99 L99 0 M0 132 L132 0 M0 165 L165 0M33 200 L200 33 M66 200 L200 66 M99 200 L200 99 M132 200 L200 132 M165 200 L200 165'/%3E%3Ccircle cx='0' cy='0' r='22'/%3E%3Ccircle cx='0' cy='0' r='48'/%3E%3Ccircle cx='0' cy='0' r='74'/%3E%3Ccircle cx='0' cy='0' r='100'/%3E%3Ccircle cx='0' cy='0' r='130'/%3E%3C/g%3E%3C/svg%3E");
+}
+.web-tl{top:-40px;left:-40px}
+.web-tr{top:-40px;right:-40px;transform:scaleX(-1)}
+.web-bl{bottom:-40px;left:-40px;transform:scaleY(-1)}
+.web-br{bottom:-40px;right:-40px;transform:scale(-1)}
+
+.container{max-width:1120px;margin:0 auto;padding:24px 16px 80px;position:relative;z-index:1}
+header{text-align:center;margin:8px 0 26px;position:relative}
+h1{
+  font-family:Impact,"Arial Black",Haettenschweiler,sans-serif;
+  font-size:clamp(34px,6.5vw,68px);
+  line-height:.9;margin:0;color:var(--red);
+  letter-spacing:1px;
+  text-shadow:5px 5px 0 #000, 0 0 24px rgba(230,57,70,.35);
+  transform:rotate(-1.2deg);
+}
+.tagline{
+  margin:10px 0 0;font-weight:800;color:var(--muted);
+  text-transform:uppercase;letter-spacing:2.5px;font-size:13px;
+}
+.card{
+  background:linear-gradient(180deg,var(--card),var(--card2));
+  border:3px solid #000;border-radius:20px;
+  box-shadow:7px 7px 0 #000, 0 0 0 3px var(--blue) inset;
+  padding:18px;position:relative;overflow:hidden;
+}
+.card::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(230,57,70,.10), transparent 40%),
+    radial-gradient(circle at 85% 80%, rgba(29,53,87,.25), transparent 45%);
+}
+.progress-wrap{margin-bottom:20px}
+.progress-label{display:flex;justify-content:space-between;align-items:center;font-weight:900;text-transform:uppercase;letter-spacing:1.2px;font-size:12px;color:var(--muted);margin-bottom:10px}
+.progress-bar{height:32px;background:#08121f;border:3px solid #000;border-radius:14px;overflow:hidden;box-shadow:inset 0 3px 8px rgba(0,0,0,.7);position:relative}
+.progress-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--blue),var(--red));box-shadow:0 0 18px rgba(230,57,70,.55) inset;transition:width .45s cubic-bezier(.2,.8,.2,1);position:relative}
+.progress-fill::after{content:"";position:absolute;inset:0;background-image:repeating-linear-gradient(-45deg,rgba(0,0,0,.18) 0 9px,transparent 9px 18px);mix-blend-mode:multiply}
+
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:22px}
+.stat{background:var(--card);border:3px solid #000;border-radius:18px;box-shadow:6px 6px 0 #000;padding:16px;text-align:center;position:relative}
+.stat .label{font-size:11px;letter-spacing:1.8px;color:var(--muted);font-weight:900;text-transform:uppercase}
+.stat .value{font-family:Impact, sans-serif;font-size:52px;line-height:1;color:var(--ink);text-shadow:4px 4px 0 #000;margin:8px 0 12px}
+.btn{
+  appearance:none;border:3px solid #000;background:#16273b;color:var(--ink);
+  font-weight:900;text-transform:uppercase;letter-spacing:1px;
+  padding:9px 14px;border-radius:12px;cursor:pointer;
+  box-shadow:4px 4px 0 #000;transition:transform .06s,filter .15s;font-size:12px
+}
+.btn:hover{filter:brightness(1.08)}
+.btn:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #000}
+.btn.red{background:var(--red);color:#fff}
+.btn.blue{background:var(--blue);color:#fff}
+.btn.ghost{background:transparent}
+
+.main-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:18px;align-items:start}
+.card h2{margin:0 0 12px;font-family:Impact,sans-serif;letter-spacing:.8px;font-size:24px;color:#fff;text-shadow:3px 3px 0 #000;display:flex;align-items:center;gap:9px}
+.card h2 .dot{width:11px;height:11px;border-radius:50%;background:var(--red);box-shadow:0 0 0 3px #000,0 0 12px rgba(230,57,70,.6)}
+.input-row{display:flex;gap:8px;margin-bottom:12px}
+.input-row input{flex:1;background:#0a1320;color:var(--ink);border:3px solid #000;border-radius:12px;padding:11px 12px;font-weight:700;outline:none;box-shadow:inset 0 2px 0 rgba(0,0,0,.55)}
+.input-row input::placeholder{color:#5c738d}
+.list{display:flex;flex-direction:column;gap:9px;max-height:320px;overflow:auto;padding-right:4px}
+.item{display:flex;align-items:center;gap:10px;background:#0b1422;border:2px solid #000;border-radius:13px;padding:9px 11px;box-shadow:4px 4px 0 #000}
+.item input[type="checkbox"]{width:20px;height:20px;accent-color:var(--red);cursor:pointer;flex:0 0 auto}
+.item .text{flex:1;font-weight:700;word-break:break-word}
+.item.completed .text{text-decoration:line-through;opacity:.6}
+.item .del{background:transparent;border:none;color:#7a8fa8;cursor:pointer;font-size:20px;line-height:1;padding:0 4px}
+.item .del:hover{color:var(--red)}
+
+.reason{display:flex;align-items:center;gap:10px;background:#0b1422;border:2px dashed #1e3a58;border-radius:13px;padding:9px 11px}
+.reason.crossed .text{text-decoration:line-through wavy var(--red) 2.5px;opacity:.55}
+.reason .text{flex:1;font-weight:700}
+.reason .x{margin-left:auto;background:transparent;border:none;color:#6a819b;cursor:pointer;font-size:18px}
+
+.quests{display:flex;flex-direction:column;gap:12px}
+.quest{background:#0b1422;border:2.5px solid #000;border-radius:15px;padding:12px;box-shadow:4px 4px 0 #000}
+.quest-top{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.quest-name{flex:1;background:transparent;border:none;color:var(--ink);font-weight:900;font-size:15px;outline:none;border-bottom:2px dashed transparent;padding:3px 0}
+.quest-name:focus{border-bottom-color:var(--blue)}
+.quest-pct{width:72px;background:#07111d;border:2.5px solid #000;border-radius:9px;color:var(--ink);padding:6px 8px;font-weight:800;text-align:center}
+.quest-del{background:transparent;border:none;color:#6b7f95;cursor:pointer;font-size:22px;line-height:1}
+.quest-del:hover{color:var(--red)}
+.quest-bar{height:13px;background:#06101b;border:2.5px solid #000;border-radius:9px;overflow:hidden}
+.quest-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--red),var(--blue));transition:width .35s}
+
+.quote-card .quote{font-size:18px;font-weight:800;line-height:1.45;background:#0a1320;border:2.5px solid #000;border-radius:16px;padding:18px 16px 16px;box-shadow:5px 5px 0 #000;position:relative;min-height:84px}
+.quote-card .quote::before{content:'“';position:absolute;top:-22px;left:10px;font-size:54px;color:var(--red);font-family:Impact;text-shadow:3px 3px 0 #000}
+.quote-actions{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
+.small{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;font-weight:800}
+
+.reset{margin:18px auto 0;display:block;background:var(--red);color:#fff;border:3px solid #000;border-radius:14px;padding:10px 16px;font-weight:900;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;box-shadow:5px 5px 0 #000}
+.reset:hover{filter:brightness(1.05)}
+.reset:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #000}
+
+.empty{opacity:.6;text-align:center;font-weight:700;padding:14px;border:2px dashed #1d3557;border-radius:12px;color:var(--muted)}
+
+@media (max-width:920px){
+  .stats{grid-template-columns:1fr;gap:12px}
+  .main-grid{grid-template-columns:1fr}
+  h1{font-size:42px}
+  .stat .value{font-size:44px}
+}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#1c2e46;border:2px solid #000;border-radius:8px}
+</style>
+</head>
+<body>
+<div class="web web-tl"></div><div class="web web-tr"></div><div class="web web-bl"></div><div class="web web-br"></div>
+
+<div class="container">
+  <header>
+    <h1>ABSURDIST SPIDEY LIFE TRACKER</h1>
+    <p class="tagline">1000 reasons not to. swing anyway.</p>
+  </header>
+
+  <section class="card progress-wrap">
+    <div class="progress-label">
+      <span>DAILY PROGRESS</span>
+      <span id="progressText">0/0 swings</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  </section>
+
+  <section class="stats">
+    <div class="stat">
+      <div class="label">SWINGS TAKEN</div>
+      <div class="value" id="statSwings">0</div>
+      <button class="btn red" id="btnSwing">+1</button>
+    </div>
+    <div class="stat">
+      <div class="label">DAYS SKIPPED</div>
+      <div class="value" id="statSkipped">0</div>
+      <button class="btn" id="btnSkip">skip</button>
+    </div>
+    <div class="stat">
+      <div class="label">DID IT ANYWAY STREAK</div>
+      <div class="value" id="statStreak">0</div>
+      <button class="btn blue" id="btnStreak">keep streak</button>
+    </div>
+  </section>
+
+  <div class="main-grid">
+    <div class="left">
+      <section class="card">
+        <h2><span class="dot"></span> Daily Swing Log</h2>
+        <div class="input-row">
+          <input id="taskInput" placeholder="Add a swing (e.g., 2 leetcode mediums)">
+          <button class="btn red add-btn" id="addTask">Add</button>
+        </div>
+        <div class="list" id="taskList"></div>
+      </section>
+
+      <section class="card" style="margin-top:18px">
+        <h2><span class="dot"></span> Reasons Not To</h2>
+        <div class="input-row">
+          <input id="reasonInput" placeholder="Add an excuse to web up">
+          <button class="btn add-btn" id="addReason">Add</button>
+        </div>
+        <div class="list" id="reasonList"></div>
+      </section>
+    </div>
+
+    <div class="right">
+      <section class="card">
+        <h2><span class="dot"></span> GOOGLE LONDON</h2>
+        <div class="small" style="margin:-6px 0 10px">META QUESTS</div>
+        <div class="quests" id="questList"></div>
+        <button class="btn ghost" id="addQuest" style="margin-top:10px">+ Add Quest</button>
+      </section>
+
+      <section class="card quote-card" style="margin-top:18px">
+        <h2><span class="dot"></span> Web of Wisdom</h2>
+        <div class="quote" id="quoteText"></div>
+        <div class="quote-actions">
+          <span class="small">spidey says</span>
+          <button class="btn blue" id="newQuote">NEW WEB OF WISDOM</button>
+        </div>
+      </section>
+
+      <button id="reset" class="reset">RESET ALL PROGRESS</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const todayStr = () => new Date().toISOString().slice(0,10);
+
+  const quotes = [
+    "With great power comes great inability to pay rent",
+    "1000 reasons not to swing. Swing anyway",
+    "If it was easy they'd call it Batman",
+    "Failed boards speedrun any% — now the redemption arc",
+    "London isn't a city. It's a respawn point",
+    "My spidey-sense is just anxiety with branding",
+    "Homework? I thought you said homecoming",
+    "Multiverse of midterms",
+    "Peter Parker had a job. I have JEE",
+    "Vengeance is expensive. I just want a scholarship",
+    "Web fluid low, copium high",
+    "Doc Ock had 4 arms and still couldn't multitask like me",
+    "Swing first, overthink later",
+    "MJ broke up with Peter. JEE broke up with me",
+    "Aunt May's wheat cakes > my will to live",
+    "I put the 'pro' in procrastinate",
+    "Thwip happens",
+    "Daily Bugle would fire me for this attendance",
+    "My villain origin story is just backlogs",
+    "Not all heroes wear capes. Some wear hoodies at 3am",
+    "Stark can't fund my coaching fees",
+    "To-do list? More like to-doom list",
+    "Even Venom needs a study break",
+    "Miles Morales has rhythm. I have algorithms",
+    "When in doubt, plot twist",
+    "Stan Lee didn't write this struggle arc",
+    "3am debugging is my spider-verse",
+    "I fell off a building once. It was called expectations",
+    "Google London or bust. Preferably not bust",
+    "Yihsaa won't date me but at least IOI might",
+    "If I miss a swing, I just invent a new timeline",
+    "My life runs on caffeine and unresolved trauma",
+    "Swing anyway, cry later",
+    "Can't pay rent, but can pay attention (sometimes)",
+    "The symbiote is just my imposter syndrome",
+    "Aunt May: 'Go get 'em tiger' Me: opens LeetCode",
+    "Parallel parking? Try parallel universes",
+    "Gamora? I'd rather Google-mora",
+    "It's not a bug, it's a spider feature",
+    "With great backlogs comes great comebacks",
+    "Nap for 20 minutes, wake up in another dimension",
+    "Even Spider-Ham would outrank me in boards"
+  ];
+
+  const DEFAULT = {
+    stats:{swingsTaken:0, daysSkipped:0, streak:0, lastStreakDate:null},
+    daily:{date:todayStr(), tasks:[]},
+    reasons:[
+      {id:1,text:"Too tired to swing",crossed:false},
+      {id:2,text:"Boards PTSD kicking in",crossed:false},
+      {id:3,text:"What if I fail again?",crossed:false},
+      {id:4,text:"It's too late to start",crossed:false}
+    ],
+    quests:[
+      {id:1,name:"Yihsaa",pct:12},
+      {id:2,name:"JEE Advanced",pct:28},
+      {id:3,name:"IOI Prep",pct:9},
+      {id:4,name:"SWE Skills",pct:44},
+      {id:5,name:"Communication",pct:18}
+    ],
+    quoteIndex: Math.floor(Math.random()*quotes.length)
+  };
+
+  function load(){
+    try{
+      const raw = localStorage.getItem('spideyTrackerFinal');
+      if(raw){
+        const p = JSON.parse(raw);
+        if(!p.daily || p.daily.date !== todayStr()){
+          p.daily = {date:todayStr(), tasks:[]};
+        }
+        p.stats = p.stats || DEFAULT.stats;
+        p.reasons = p.reasons || [];
+        p.quests = p.quests || [];
+        p.quoteIndex = p.quoteIndex ?? 0;
+        return p;
+      }
+    }catch(e){}
+    return JSON.parse(JSON.stringify(DEFAULT));
+  }
+  let data = load();
+  const save = () => localStorage.setItem('spideyTrackerFinal', JSON.stringify(data));
+
+  // DOM
+  const $ = id => document.getElementById(id);
+  const progressFill = $('progressFill');
+  const progressText = $('progressText');
+  const statSwings = $('statSwings');
+  const statSkipped = $('statSkipped');
+  const statStreak = $('statStreak');
+  const btnSwing = $('btnSwing');
+  const btnSkip = $('btnSkip');
+  const btnStreak = $('btnStreak');
+  const taskInput = $('taskInput');
+  const addTask = $('addTask');
+  const taskList = $('taskList');
+  const reasonInput = $('reasonInput');
+  const addReason = $('addReason');
+  const reasonList = $('reasonList');
+  const questList = $('questList');
+  const addQuest = $('addQuest');
+  const quoteText = $('quoteText');
+  const newQuote = $('newQuote');
+  const resetBtn = $('reset');
+
+  function renderProgress(){
+    const total = data.daily.tasks.length;
+    const done = data.daily.tasks.filter(t=>t.completed).length;
+    const pct = total ? Math.round(done/total*100) : 0;
+    progressFill.style.width = pct + '%';
+    progressText.textContent = `${done}/${total} swings`;
+  }
+  function renderStats(){
+    statSwings.textContent = data.stats.swingsTaken;
+    statSkipped.textContent = data.stats.daysSkipped;
+    statStreak.textContent = data.stats.streak;
+  }
+  function renderTasks(){
+    taskList.innerHTML = '';
+    if(data.daily.tasks.length===0){
+      taskList.innerHTML = `<div class="empty">No swings yet. Add one, hero.</div>`;
+      return;
+    }
+    data.daily.tasks.forEach(t=>{
+      const div = document.createElement('div');
+      div.className = 'item' + (t.completed?' completed':'');
+      div.innerHTML = `
+        <input type="checkbox" ${t.completed?'checked':''}>
+        <span class="text"></span>
+        <button class="del" title="delete">×</button>
+      `;
+      div.querySelector('.text').textContent = t.text;
+      const cb = div.querySelector('input');
+      cb.onchange = () => toggleTask(t.id);
+      div.querySelector('.del').onclick = () => { data.daily.tasks = data.daily.tasks.filter(x=>x.id!==t.id); save(); renderTasks(); renderProgress(); };
+      taskList.appendChild(div);
+    });
+  }
+  function toggleTask(id){
+    const t = data.daily.tasks.find(x=>x.id===id);
+    if(!t) return;
+    t.completed = !t.completed;
+    if(t.completed && !t.counted){
+      t.counted = true;
+      data.stats.swingsTaken++;
+      const r = data.reasons.find(r=>!r.crossed);
+      if(r) r.crossed = true;
+    }
+    save();
+    renderProgress();
+    renderStats();
+    renderTasks();
+    renderReasons();
+  }
+  function renderReasons(){
+    reasonList.innerHTML = '';
+    if(data.reasons.length===0){
+      reasonList.innerHTML = `<div class="empty">No excuses. Suspicious.</div>`;
+      return;
+    }
+    data.reasons.forEach(r=>{
+      const div = document.createElement('div');
+      div.className = 'reason' + (r.crossed?' crossed':'');
+      div.innerHTML = `<span class="text"></span><button class="x" title="remove">×</button>`;
+      div.querySelector('.text').textContent = r.text;
+      div.querySelector('.text').onclick = () => { r.crossed = !r.crossed; save(); renderReasons(); };
+      div.querySelector('.x').onclick = () => { data.reasons = data.reasons.filter(x=>x.id!==r.id); save(); renderReasons(); };
+      reasonList.appendChild(div);
+    });
+  }
+  function renderQuests(){
+    questList.innerHTML = '';
+    data.quests.forEach(q=>{
+      const div = document.createElement('div');
+      div.className = 'quest';
+      div.innerHTML = `
+        <div class="quest-top">
+          <input class="quest-name" value="">
+          <input class="quest-pct" type="number" min="0" max="100">
+          <button class="quest-del" title="delete">×</button>
+        </div>
+        <div class="quest-bar"><div class="quest-fill"></div></div>
+      `;
+      const nameIn = div.querySelector('.quest-name');
+      const pctIn = div.querySelector('.quest-pct');
+      const fill = div.querySelector('.quest-fill');
+      nameIn.value = q.name;
+      pctIn.value = q.pct;
+      fill.style.width = q.pct + '%';
+      nameIn.oninput = () => { q.name = nameIn.value; save(); };
+      pctIn.oninput = () => {
+        let v = parseInt(pctIn.value)||0;
+        v = Math.max(0, Math.min(100, v));
+        q.pct = v; pctIn.value = v; fill.style.width = v+'%'; save();
+      };
+      div.querySelector('.quest-del').onclick = () => { data.quests = data.quests.filter(x=>x.id!==q.id); save(); renderQuests(); };
+      questList.appendChild(div);
+    });
+  }
+  function renderQuote(){
+    quoteText.textContent = quotes[data.quoteIndex % quotes.length];
+  }
+
+  function renderAll(){
+    renderProgress();
+    renderStats();
+    renderTasks();
+    renderReasons();
+    renderQuests();
+    renderQuote();
+  }
+
+  // Events
+  btnSwing.onclick = () => { data.stats.swingsTaken++; save(); renderStats(); btnSwing.textContent = '+1!'; setTimeout(()=>btnSwing.textContent='+1',400); };
+  btnSkip.onclick = () => { data.stats.daysSkipped++; data.stats.streak = 0; data.stats.lastStreakDate = null; save(); renderStats(); };
+  btnStreak.onclick = () => {
+    const today = todayStr();
+    if(data.stats.lastStreakDate !== today){
+      data.stats.streak++; data.stats.lastStreakDate = today; save(); renderStats();
+      btnStreak.textContent = 'STREAK KEPT ✓';
+      setTimeout(()=>btnStreak.textContent='keep streak',1200);
+    } else {
+      btnStreak.textContent = 'already kept';
+      setTimeout(()=>btnStreak.textContent='keep streak',900);
+    }
+  };
+  const addTaskFn = () => {
+    const v = taskInput.value.trim();
+    if(!v) return;
+    data.daily.tasks.push({id:Date.now(), text:v, completed:false, counted:false});
+    taskInput.value=''; save(); renderTasks(); renderProgress();
+  };
+  addTask.onclick = addTaskFn;
+  taskInput.addEventListener('keydown', e=>{ if(e.key==='Enter') addTaskFn(); });
+
+  const addReasonFn = () => {
+    const v = reasonInput.value.trim();
+    if(!v) return;
+    data.reasons.push({id:Date.now(), text:v, crossed:false});
+    reasonInput.value=''; save(); renderReasons();
+  };
+  addReason.onclick = addReasonFn;
+  reasonInput.addEventListener('keydown', e=>{ if(e.key==='Enter') addReasonFn(); });
+
+  addQuest.onclick = () => {
+    data.quests.push({id:Date.now(), name:'New Quest', pct:0});
+    save(); renderQuests();
+    setTimeout(()=>{ const inputs = questList.querySelectorAll('.quest-name'); inputs[inputs.length-1].focus(); },0);
+  };
+  newQuote.onclick = () => {
+    let idx; do{ idx = Math.floor(Math.random()*quotes.length); } while(idx===data.quoteIndex && quotes.length>1);
+    data.quoteIndex = idx; save(); renderQuote();
+  };
+  resetBtn.onclick = () => { localStorage.removeItem('spideyTrackerFinal'); location.reload(); };
+
+  renderAll();
+})();
+</script>
+</body>
+</html>
